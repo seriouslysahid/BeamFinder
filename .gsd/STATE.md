@@ -2,20 +2,18 @@
 
 > **Project**: BeamFinder
 > **Last Updated**: 2026-02-10
-> **Current Phase**: Phase 2 — Detection Pipeline (Planned)
+> **Current Phase**: Phase 2 — Detection Pipeline (Completed)
 
 ## Active Context
 
-- Phase 1 complete ✅
-- Phase 2 planned with 2 plans across 2 waves:
-  - Plan 2.1 (wave 1): Detector & CSV Writer modules
-  - Plan 2.2 (wave 2): Main detection script & e2e test
-- Next step: `/execute 2` to run all Phase 2 plans
+- Phase 1 complete ✅ (Foundation)
+- Phase 2 complete ✅ (Detection Pipeline)
+- Next step: `/plan 3` to create Phase 3 (Testing & Validation) execution plans
 
 ## Last Session Summary
 
-Phase 1 completed. Phase 2 planned with detector module, CSV writer, main script, and integration test.
+Phase 2 executed successfully. Created detector module, CSV writer, and main script. Pipeline verified end-to-end: YOLO26n → 5 detections → CSV with correct format.
 
 ## Next Steps
 
-1. `/execute 2` — run Phase 2 plans
+1. `/plan 3` — Create Phase 3 execution plans
