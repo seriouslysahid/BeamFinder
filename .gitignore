@@ -21,9 +21,8 @@ env/
 *.onnx
 *.engine
 
-# Data & Output (keep .gitkeep files)
-data/images/*
-!data/images/.gitkeep
+# Data & Output
+data/
 output/*
 !output/.gitkeep
 
