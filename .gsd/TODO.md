@@ -4,10 +4,10 @@
 
 ## Immediate
 
-- [ ] Run `/plan 1` to create Phase 1 execution plan
+- [ ] Run `/execute 3` to execute Phase 3 (Validation)
 
 ## Backlog
 
 - [ ] Investigate COCO class coverage for drone-like objects
-- [ ] Determine optimal confidence threshold for drone detection
-- [ ] Decide on image resolution / preprocessing strategy
+- [x] Determine optimal confidence threshold for drone detection (Set to 0.25 in config)
+- [x] Decide on image resolution / preprocessing strategy (Set to 640px)
