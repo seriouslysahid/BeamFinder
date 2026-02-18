@@ -21,10 +21,8 @@ env/
 *.onnx
 *.engine
 
-# Data & Output
+# Data
 data/
-output/*
-!output/.gitkeep
 runs/
 
 # IDE
