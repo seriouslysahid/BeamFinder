@@ -25,6 +25,7 @@ env/
 data/
 output/*
 !output/.gitkeep
+runs/
 
 # IDE
 .vscode/
@@ -40,6 +41,11 @@ desktop.ini
 
 # Jupyter
 .ipynb_checkpoints/
+
+# GSD / Agent
+.agent/
+.gemini/
+.gsd/
 
 # Misc
 *.log

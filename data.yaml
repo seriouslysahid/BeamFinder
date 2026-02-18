@@ -1,0 +1,6 @@
+path: data/images
+train: train
+val: validation
+
+nc: 1
+names: ["drone"]

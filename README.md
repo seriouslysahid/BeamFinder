@@ -1,93 +1,74 @@
-# BeamFinder
+# BeamFinder — Drone Detection for THz Beam Steering
 
-Drone detection pipeline for line-of-sight (LoS) communication beam-steering.
+A detection pipeline that uses YOLOv26n to locate drones in images and outputs bounding box coordinates to a CSV file. Built as part of a study on line-of-sight beam steering for THz communication.
 
-## Overview
+## How It Works
 
-BeamFinder uses [YOLO26n](https://docs.ultralytics.com/models/yolo26/) to detect drones in images captured by a stationary ground camera. The detected bounding box coordinates `(x, y, width, height)` are output to a CSV file, which feeds into a line-of-sight communication system for automatic beam selection.
+1. **Detection:** Runs YOLO26n on images to detect objects and output bounding boxes
+2. **Training:** Fine-tunes YOLO26n on a drone dataset for better accuracy (requires annotations)
 
-## Prerequisites
-
-- Python 3.10 or higher
-
-## Installation
-
-1. **Clone the repository:**
-   ```bash
-   git clone <repository-url>
-   cd BeamFinder
-   ```
-
-2. **Create a virtual environment (recommended):**
-   ```bash
-   python -m venv venv
-   ```
-
-3. **Activate the virtual environment:**
-
-   - **Windows:**
-     ```powershell
-     .\venv\Scripts\Activate.ps1
-     ```
-   - **Linux/macOS:**
-     ```bash
-     source venv/bin/activate
-     ```
-
-4. **Install dependencies:**
-   ```bash
-   pip install -r requirements.txt
-   ```
-
-## Usage
-
-1. Place your drone images in the `data/images/` directory (JPEG, PNG, BMP, or TIFF).
-
-2. Run the detection pipeline:
-   ```bash
-   python -m src.detect
-   ```
-
-3. Results are saved to `output/detections.csv` with columns:
-   | Column | Description |
-   |--------|-------------|
-   | `image_name` | Source image filename |
-   | `x` | Bounding box X coordinate |
-   | `y` | Bounding box Y coordinate |
-   | `width` | Bounding box width |
-   | `height` | Bounding box height |
-   | `confidence` | Detection confidence score |
-   | `class` | Detected object class |
+> **Note:** The pretrained model uses COCO weights. "Drone" is not a COCO class, so detections will be generic objects until the model is fine-tuned on drone-specific data.
 
 ## Project Structure
 
 ```
 BeamFinder/
-├── src/
-│   ├── __init__.py          # Package marker
-│   ├── config.py            # Configuration (paths, model, thresholds)
-│   └── detect.py            # Detection pipeline (Phase 2)
-├── data/
-│   └── images/              # Input: drone images go here
-├── output/                  # Output: CSV detection results
-├── .gsd/                    # Project management docs
-├── requirements.txt         # Python dependencies
-├── .gitignore
-└── README.md
+├── detect.py          # Detection script (outputs bounding boxes)
+├── train.py           # Training script (fine-tune on drone data)
+├── data.yaml          # Dataset configuration for training
+├── issues.md          # Known issues for professor review
+├── yolo26n.pt         # Pretrained YOLO26n model weights
+├── requirements.txt   # Python dependencies
+├── data/images/       # Dataset (not tracked in git)
+│   ├── train/         # 7,970 training images
+│   └── validation/    # 3,416 validation images
+├── output/            # Detection results (CSV)
+└── runs/              # Training results (auto-generated)
 ```
 
-## Configuration
+## Setup
 
-All settings are centralized in `src/config.py`:
+```bash
+pip install -r requirements.txt
+```
 
-| Parameter | Default | Description |
-|-----------|---------|-------------|
-| `MODEL_NAME` | `yolo26n.pt` | YOLO26 model variant |
-| `CONFIDENCE_THRESHOLD` | `0.25` | Minimum detection confidence |
-| `IMAGE_SIZE` | `640` | Inference image size (px) |
-| `IMAGE_DIR` | `data/images/` | Input image directory |
-| `OUTPUT_CSV` | `output/detections.csv` | Output CSV path |
+## Detection
 
-## License
+```bash
+python detect.py
+```
 
-MIT
+Outputs bounding box coordinates to `output/detections.csv`.
+
+## Training
+
+Requires bounding box annotation files (`.txt` per image in YOLO format). See [issues.md](issues.md) for details.
+
+```bash
+python train.py
+```
+
+Training results are saved to `runs/drone_detect/`.
+
+## Output Format (detections.csv)
+
+| Column | Description |
+|--------|-------------|
+| image_name | Source image filename |
+| x | Top-left X coordinate |
+| y | Top-left Y coordinate |
+| width | Bounding box width |
+| height | Bounding box height |
+| confidence | Detection confidence (0-1) |
+| class | Detected object class |
+
+## Requirements
+
+- Python 3.10+
+- ultralytics
+
+## References
+
+- [Ultralytics YOLO Docs](https://docs.ultralytics.com/)
+- [YOLO Predict Mode](https://docs.ultralytics.com/modes/predict/)
+- [YOLO Train Mode](https://docs.ultralytics.com/modes/train/)

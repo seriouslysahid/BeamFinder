@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>BeamFinder — Weekly Progress</title>
+  <meta charset="utf-8">
+  <style>
+    @import url(https://fonts.googleapis.com/css?family=Yanone+Kaffeesatz);
+    @import url(https://fonts.googleapis.com/css?family=Droid+Serif:400,700,400italic);
+    @import url(https://fonts.googleapis.com/css?family=Ubuntu+Mono:400,700,400italic);
+
+    body {
+      font-family: 'Droid Serif';
+    }
+
+    h1,
+    h2,
+    h3 {
+      font-family: 'Yanone Kaffeesatz';
+      font-weight: normal;
+    }
+
+    .remark-code,
+    .remark-inline-code {
+      font-family: 'Ubuntu Mono';
+    }
+
+    .remark-slide-content {
+      font-size: 22px;
+    }
+
+    li {
+      margin-bottom: 6px;
+    }
+
+    table {
+      border-collapse: collapse;
+      width: 100%;
+      font-size: 17px;
+    }
+
+    th,
+    td {
+      text-align: left;
+      padding: 4px 8px;
+      border-bottom: 1px solid #ddd;
+    }
+
+    th {
+      background: #f5f5f5;
+    }
+
+    .red {
+      color: #e74c3c;
+    }
+
+    .orange {
+      color: #e67e22;
+    }
+
+    .footnote {
+      position: absolute;
+      bottom: 1.5em;
+      left: 2em;
+      font-size: 14px;
+      color: #999;
+    }
+
+    .img-table {
+      width: 100%;
+      border: none;
+      margin-top: 8px;
+    }
+
+    .img-table td {
+      border: none;
+      text-align: center;
+      padding: 4px 8px;
+      vertical-align: top;
+      width: 50%;
+      background: none;
+    }
+
+    .img-table img {
+      width: 100%;
+      border: 1px solid #ccc;
+    }
+
+    .img-table .caption {
+      font-size: 13px;
+      color: #888;
+      margin-top: 4px;
+    }
+  </style>
+</head>
+
+<body>
+  <textarea id="source">
+
+class: center, middle
+
+# BeamFinder
+
+### Drone Detection for Line of Sight Communication
+
+Krish Mathur - 2023A8PS1223G
+
+Sahid Alam - 2023A1PS1164G
+
+---
+
+# Project Recap
+
+We're working on a **THz (terahertz) communication system** where a ground station needs to maintain a wireless link with a drone in the air.
+
+- The ground station has ~50 narrow beams — only one can be active at a time
+- A camera points up at the sky and captures the drone
+- We need to **detect the drone's position** in the frame so the system knows which beam to activate
+- Our model outputs **(x, y, width, height)** — that bounding box tells us where the drone is
+- If the detection is wrong or inaccurate → wrong beam gets selected → link drops
+
+We chose **YOLO26n** (the nano variant, released Jan 2026) because it's lightweight enough for real-time use, and it has built-in improvements for small-object detection which is exactly our problem — drones look tiny from the ground.
+
+---
+
+# What We Did — Pipeline
+
+Built two scripts:
+
+- **`detect.py`** — runs YOLO26n on images, outputs bboxes to CSV
+- **`train.py`** — fine-tunes model on our drone data
+- **`data.yaml`** — dataset config (1 class: drone)
+
+Output format:
+
+```
+image_name, x, y, width, height, confidence, class
+```
+---
+# Dataset
+
+- **7,970** training images, **3,416** validation images
+- Resolution: 960 × 540, RGB JPEG
+- Used dataset/train_stable and dataset/validation_stable
+- 51 numbered subfolders (0–50)
+
+<table class="img-table">
+<tr>
+<td><img src="sample_clean.jpg" /><div class="caption">Typical image — small drone, sun glare</div></td>
+<td><img src="sample_head.jpg" /><div class="caption">Person's head visible at edge</div></td>
+</tr>
+</table>
+
+---
+
+# What We Did — Training Settings
+
+| Setting | Value | What it does | Why we used it |
+|---------|-------|-------------|----------------|
+| `batch` | -1 | YOLO auto-selects batch size | maximizes GPU/CPU without crashing |
+| `cache` | disk | caches images to disk, not RAM | 11K images won't fit in memory |
+| `amp` | True | uses float16 instead of float32 | ~2x faster, half the memory |
+| `patience` | 10 | stops training if val doesn't improve for 10 epochs | prevents wasting time |
+| `cos_lr` | True | LR follows a cosine curve instead of linear | smoother convergence |
+| `freeze` | 10 | freezes first 10 backbone layers | only trains detection head, less overfitting |
+| `close_mosaic` | 10 | turns off mosaic augmentation for last 10 epochs | Model fine-tunes on clean images at the end |
+
+---
+
+# Results So Far
+
+Using pretrained COCO model (not fine-tuned yet).
+
+**What works:**
+- Pipeline runs end-to-end, no crashes
+- Bounding boxes in correct (x, y, w, h) format
+- Annotated images saved for inspection
+
+**The issue:** COCO has no "drone" class.
+
+Drones get labeled as "bird" — similar shape at distance.
+
+---
+
+# Problems — Annotations .red[blocking]
+
+Dataset has images but **no label files**.
+
+YOLO training needs a `.txt` per image:
+
+```
+0 0.45 0.32 0.12 0.08
+```
+
+Without labels → can't fine-tune for drones.
+
+**This is the main blocker right now.**
+
+---
+
+# Problems — Dataset Quality
+
+**Sun glare / lens flare**
+- Present in almost every image — bright diagonal streak across frame
+- Model might learn to associate glare with "drone"
+
+**Drone is very small**
+- Only ~20–40 pixels across in a 960×540 frame
+- Some images the drone is nearly invisible (just a dot)
+
+**People appearing in frame**
+- Some images show a person's head or hand at the edge
+- Could cause false positive detections
+
+---
+
+# Problems — Other Issues
+
+**Uneven image distribution**
+- Subfolders range from 1 to 1,126 images
+
+**Aspect ratio**
+- 16:9 images get letterboxed to 640×640 square
+
+**Low contrast**
+- Dark drone against bright overexposed sky
+- Hard to distinguish from noise or dust on lens
+
+---
+
+# Analysis
+
+**Annotation is the bottleneck.** Everything else is ready.
+
+**YOLO26n fits well:**
+- Single-class detection is simplest task type
+- ProgLoss + STAL helps with small objects
+- Nano size works for edge deployment
+
+**Open questions:**
+- Is (x, y, w, h) enough?
+- How precise must the bbox be for beam selection?
+
+---
+
+# Questions for You
+
+1. **Annotations** — best way to label 11K images?
+    - Label Studio is a good option can use community edition (https://labelstud.io/)
+    - https://labelstud.io/blog/use-yolo26-with-label-studio-for-fast-bounding-box-pre-annotations/
+
+2. **Use better dataset?**
+    - since sun glare, lens flare, low contrast, small object size issues
+    - Can use CVPR 2025 Anti-UAV Workshop & Challenge dataset
+    - called Anti-UAV Challenge dataset (https://github.com/ZhaoJ9014/Anti-UAV)
+
+3. **Model size** — should we try yolo26s instead of yolo26n?
+    - yolo26s has 2x more parameters → better feature extraction
+    - our drone is ~20-40px across — nano might not have enough capacity to learn such small features
+    - tradeoff: slower inference but potentially much better accuracy on small objects
+
+---
+
+# Next Steps
+- Get guidance on annotation approach
+- Annotate ~500–1000 images
+- Run first training, report metrics
+---
+
+class: center, middle
+
+# Thank You
+
+Happy to go deeper into any slide.
+
+.footnote[Made with [remark.js](https://github.com/gnab/remark)]
+
+    </textarea>
+  <script src="https://remarkjs.com/downloads/remark-latest.min.js"></script>
+  <script>
+    var slideshow = remark.create({
+      ratio: '16:9',
+      countIncrementalSlides: false
+    });
+  </script>
+</body>
+
+</html>
