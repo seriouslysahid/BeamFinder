@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "WebFetch(domain:www.deepsense6g.net)",
+      "WebFetch(domain:github.com)",
+      "WebFetch(domain:pysource.com)"
+    ]
+  }
+}

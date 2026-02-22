@@ -1,1 +1,5 @@
 ultralytics>=8.4.0
+sahi>=0.11.0
+
+# GPU support (RTX 3050 / CUDA 12.6):
+# pip install torch torchvision --index-url https://download.pytorch.org/whl/cu126

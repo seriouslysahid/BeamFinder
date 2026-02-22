@@ -1,69 +1,53 @@
-# Known Issues & Problems
+# Known Issues & Limitations
 
-Issues encountered during development of the BeamFinder pipeline. Documented for professor review.
-
----
-
-## 1. COCO Model Does Not Have a "Drone" Class
-
-**Status:** Known limitation
-
-The pretrained YOLO26n model is trained on the COCO dataset, which has 80 object classes (person, car, bird, etc.). There is no "drone" class in COCO. Any object detection with this model will return generic objects, not drones specifically. Fine-tuning on a drone-annotated dataset is required for actual drone detection.
+Problems we ran into while building the BeamFinder pipeline, and how we dealt with them.
 
 ---
 
-## 2. No Bounding Box Annotations in Dataset
+## 1. COCO pretrained model has no "drone" class
 
-**Status:** Blocking for training
+**Status:** Expected, fixed by fine-tuning
 
-The dataset contains 7,970 training images and 3,416 validation images organized in numbered subfolders (0-50). However, there are no corresponding label files (`.txt` files with bounding box coordinates in YOLO format).
-
-YOLO detection training requires a `.txt` file per image with lines in the format:
-```
-<class_id> <x_center> <y_center> <width> <height>
-```
-where all values are normalized (0-1).
-
-**Options to resolve:**
-1. Manually annotate using a tool like [Label Studio](https://labelstud.io/) or [Roboflow](https://roboflow.com/)
-2. Use the pretrained COCO model to auto-label images, then manually review and correct
-3. Obtain pre-annotated drone detection datasets from sources like Roboflow
-
-**Awaiting professor guidance on annotation approach.**
+YOLO26s comes pretrained on COCO (80 classes - person, car, bird, etc). There's no drone class, so out-of-the-box inference won't detect drones. This is why we fine-tune on our own annotated dataset from DeepSense Scenario 23.
 
 ---
 
-## 3. Severe Class Imbalance Across Subfolders
-
-**Status:** Observation
-
-The training images are unevenly distributed across the 51 subfolders — some folders have as few as 1 image while others have over 1,000. If the folders represent different capture scenarios, this imbalance may affect training depending on how diverse the conditions are (lighting, angles, backgrounds).
-
----
-
-## 4. Windows Multiprocessing Error
+## 2. Finding the bounding box annotations
 
 **Status:** Resolved
 
-YOLO26 docs warn that on Windows, training scripts must wrap code in `if __name__ == "__main__":` to avoid `RuntimeError` from Python's multiprocessing. Both `train.py` and `detect.py` have been written accounting for this.
-
-`workers` is set to 2 (instead of default 8) to prevent multiprocessing issues on Windows.
+Initially thought the dataset didn't include bbox labels. Turns out the 11,387 YOLO-format `.txt` files are in `dataset/resources/bbox_labels_final/`. Running `prepare_dataset.py` pairs them with images and creates the standard YOLO directory layout with a 70/15/15 train/val/test split.
 
 ---
 
-## 5. Memory Usage with Large Dataset
+## 3. Uneven distribution across capture sessions
 
-**Status:** Mitigated
+**Status:** Noted
 
-With 11,386 images at 960x540 (~650 MB total), loading all images into RAM could cause overflow. Mitigated by:
-- Using `cache='disk'` instead of `cache=True` in training
-- Using `stream=True` in detection
-- Using `batch=-1` for automatic memory-based batch sizing
+The raw images come from 51 different capture subfolders with very uneven counts (some have 1 image, others 1000+). Since we shuffle before splitting, the train/val/test sets should have a reasonable mix of conditions. Haven't seen this cause problems in practice.
 
 ---
 
-## 6. Aspect Ratio Mismatch
+## 4. Windows multiprocessing doesn't work
 
-**Status:** Known limitation
+**Status:** Worked around
 
-Images are 960x540 (16:9 widescreen) but YOLO resizes to 640x640 square for inference. This introduces letterboxing (black padding) which slightly reduces effective resolution. This is standard YOLO behavior and should not significantly affect results.
+On Windows, setting `workers > 0` in Ultralytics causes a `RuntimeError` from Python's multiprocessing module. Both scripts use `if __name__ == "__main__":` (required) and `workers=0` (required on our machine). Training is a bit slower because of single-threaded data loading, but `cache="ram"` compensates for this.
+
+---
+
+## 5. Memory considerations
+
+**Status:** Under control
+
+The dataset is about 650MB of images. We cache everything in RAM during training (`cache="ram"`) which needs about 4GB of system memory but eliminates disk I/O as a bottleneck. If your machine has less than 16GB RAM, change it to `cache="disk"` in train.py.
+
+VRAM-wise, the RTX 3050 has 4GB. We use `batch=-1` (auto-sizing) and `amp=True` (FP16) so Ultralytics picks the largest batch that fits. At `imgsz=960` this is usually batch 2-4.
+
+---
+
+## 6. Aspect ratio mismatch
+
+**Status:** Mitigated with rect=True
+
+Images are 960x540 (16:9) but YOLO defaults to square inputs. Without `rect=True`, about 44% of pixels would be black padding. We enable rectangular training/inference which preserves the aspect ratio and avoids wasting compute on padding.
