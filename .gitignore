@@ -22,8 +22,8 @@ env/
 *.engine
 
 # Data
-data/
 runs/
+output/
 dataset/
 
 # IDE

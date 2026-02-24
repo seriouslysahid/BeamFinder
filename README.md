@@ -1,13 +1,11 @@
 # BeamFinder — Drone Detection for THz Beam Steering
 
-A detection pipeline that uses YOLOv26n to locate drones in images and outputs bounding box coordinates to a CSV file. Built as part of a study on line-of-sight beam steering for THz communication.
+A detection pipeline that uses YOLO26s to locate drones in images and outputs bounding box coordinates to a CSV file. Built as part of a study on line-of-sight beam steering for THz communication.
 
 ## How It Works
 
-1. **Detection:** Runs YOLO26n on images to detect objects and output bounding boxes
-2. **Training:** Fine-tunes YOLO26n on a drone dataset for better accuracy (requires annotations)
-
-> **Note:** The pretrained model uses COCO weights. "Drone" is not a COCO class, so detections will be generic objects until the model is fine-tuned on drone-specific data.
+1. **Training:** Fine-tunes YOLO26s on the DeepSense Scenario 23 drone dataset
+2. **Detection:** Runs the fine-tuned model on test images and outputs bounding boxes to CSV
 
 ## Project Structure
 
@@ -16,13 +14,16 @@ BeamFinder/
 ├── detect.py          # Detection script (outputs bounding boxes)
 ├── train.py           # Training script (fine-tune on drone data)
 ├── data.yaml          # Dataset configuration for training
-├── issues.md          # Known issues for professor review
-├── yolo26n.pt         # Pretrained YOLO26n model weights
+├── issues.md          # Known issues and notes
+├── yolo26s.pt         # Pretrained YOLO26s model weights
 ├── requirements.txt   # Python dependencies
-├── data/images/       # Dataset (not tracked in git)
-│   ├── train/         # 7,970 training images
-│   └── validation/    # 3,416 validation images
-├── output/            # Detection results (CSV)
+├── data/              # Dataset (not tracked in git)
+│   ├── images/
+│   │   ├── train/         # 7,970 images
+│   │   ├── validation/    # 1,708 images
+│   │   └── test/          # 1,709 images
+│   └── labels/            # Matching YOLO-format .txt files
+├── output/            # Detection results (CSV + annotated images)
 └── runs/              # Training results (auto-generated)
 ```
 
@@ -54,9 +55,9 @@ Training results are saved to `runs/drone_detect/`.
 
 | Column | Description |
 |--------|-------------|
-| image_name | Source image filename |
-| x | Top-left X coordinate |
-| y | Top-left Y coordinate |
+| image | Source image filename |
+| x_center | Bounding box center X |
+| y_center | Bounding box center Y |
 | width | Bounding box width |
 | height | Bounding box height |
 | confidence | Detection confidence (0-1) |

@@ -16,7 +16,7 @@ YOLO26s comes pretrained on COCO (80 classes - person, car, bird, etc). There's 
 
 **Status:** Resolved
 
-Initially thought the dataset didn't include bbox labels. Turns out the 11,387 YOLO-format `.txt` files are in `dataset/resources/bbox_labels_final/`. Running `prepare_dataset.py` pairs them with images and creates the standard YOLO directory layout with a 70/15/15 train/val/test split.
+Initially thought the dataset didn't include bbox labels. Turns out the 11,387 YOLO-format `.txt` files were in the original DeepSense download. They've been paired with images and organized into the standard YOLO directory layout under `data/` with a 70/15/15 train/val/test split (7,970 / 1,708 / 1,709).
 
 ---
 
@@ -42,7 +42,7 @@ On Windows, setting `workers > 0` in Ultralytics causes a `RuntimeError` from Py
 
 The dataset is about 650MB of images. We cache everything in RAM during training (`cache="ram"`) which needs about 4GB of system memory but eliminates disk I/O as a bottleneck. If your machine has less than 16GB RAM, change it to `cache="disk"` in train.py.
 
-VRAM-wise, the RTX 3050 has 4GB. We use `batch=-1` (auto-sizing) and `amp=True` (FP16) so Ultralytics picks the largest batch that fits. At `imgsz=960` this is usually batch 2-4.
+VRAM-wise, the RTX 3050 has 4GB. We use `batch=0.85` (85% GPU memory utilization) and `amp=True` (FP16) so Ultralytics picks the largest batch that fits. At `imgsz=960` this is usually batch 2-4.
 
 ---
 

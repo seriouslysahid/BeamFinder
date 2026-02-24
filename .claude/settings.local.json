@@ -3,7 +3,13 @@
     "allow": [
       "WebFetch(domain:www.deepsense6g.net)",
       "WebFetch(domain:github.com)",
-      "WebFetch(domain:pysource.com)"
+      "WebFetch(domain:pysource.com)",
+      "WebSearch",
+      "WebFetch(domain:docs.ultralytics.com)",
+      "WebFetch(domain:docs.pytorch.org)",
+      "WebFetch(domain:research.google.com)",
+      "WebFetch(domain:colab.research.google.com)",
+      "Bash(python:*)"
     ]
   }
 }
