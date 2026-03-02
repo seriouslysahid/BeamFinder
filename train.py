@@ -1,10 +1,15 @@
+from pathlib import Path
+
 import torch
 from ultralytics import YOLO
 
+SCRIPT_DIR = Path(__file__).resolve().parent
+
 if __name__ == "__main__":
-    # A100: enable TF32 for ~3x faster matmuls with negligible precision loss
+    # A100: maximize GPU throughput
     torch.backends.cuda.matmul.allow_tf32 = True
     torch.backends.cudnn.allow_tf32 = True
+    torch.backends.cudnn.benchmark = True  # auto-tune convolutions for fixed imgsz=960
 
     model = YOLO("yolo26s.pt")
 
@@ -18,7 +23,8 @@ if __name__ == "__main__":
         workers=8,
         cos_lr=True,
         deterministic=False,
-        project="runs",
+        compile=True,  # torch.compile — 10-30% faster on A100 + PyTorch 2.x
+        project=str(SCRIPT_DIR / "runs"),
         name="drone_detect",
         exist_ok=True,
         rect=True,

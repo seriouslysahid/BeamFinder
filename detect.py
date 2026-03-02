@@ -5,17 +5,19 @@ import torch
 from ultralytics import YOLO
 
 # ── Configuration ──────────────────────────────────────────
-MODEL = "runs/drone_detect/weights/best.pt"
-IMAGE_DIR = Path("data/images/test")
-OUTPUT_DIR = Path("output")
+SCRIPT_DIR = Path(__file__).resolve().parent
+MODEL = str(SCRIPT_DIR / "runs" / "drone_detect" / "weights" / "best.pt")
+IMAGE_DIR = SCRIPT_DIR / "data" / "images" / "test"
+OUTPUT_DIR = SCRIPT_DIR / "output"
 CONF = 0.4
 IMGSZ = 960
 # ───────────────────────────────────────────────────────────
 
 if __name__ == "__main__":
-    # A100: enable TF32 for faster matmuls
+    # A100: maximize GPU throughput
     torch.backends.cuda.matmul.allow_tf32 = True
     torch.backends.cudnn.allow_tf32 = True
+    torch.backends.cudnn.benchmark = True
 
     model = YOLO(MODEL)
     csv_path = OUTPUT_DIR / "detections.csv"
