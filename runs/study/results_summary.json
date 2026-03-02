@@ -1,0 +1,15 @@
+[
+  {
+    "model": "yolo26n",
+    "params_M": 2.6,
+    "train_time_min": 120.9,
+    "train_peak_mem_GB": 3.7,
+    "val_mAP50": 0.98,
+    "val_mAP50_95": 0.6768,
+    "test_mAP50": 0.9761,
+    "test_mAP50_95": 0.6665,
+    "preprocess_ms": 0.8,
+    "inference_ms": 2.49,
+    "postprocess_ms": 0.09
+  }
+]

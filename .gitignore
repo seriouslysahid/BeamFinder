@@ -22,7 +22,6 @@ env/
 *.engine
 
 # Data
-runs/
 output/
 dataset/
 
