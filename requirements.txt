@@ -1,5 +1,4 @@
 ultralytics>=8.4.0
-sahi>=0.11.0
+matplotlib>=3.7.0
 
-# GPU support (RTX 3050 / CUDA 12.6):
-# pip install torch torchvision --index-url https://download.pytorch.org/whl/cu126
+# Lightning.ai A100: CUDA + torch come pre-installed, no manual torch install needed.
