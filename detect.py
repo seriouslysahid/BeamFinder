@@ -14,7 +14,7 @@ IMGSZ = 960
 # ───────────────────────────────────────────────────────────
 
 if __name__ == "__main__":
-    # A100: maximize GPU throughput
+    # H100: maximize GPU throughput
     torch.backends.cuda.matmul.allow_tf32 = True
     torch.backends.cudnn.allow_tf32 = True
     torch.backends.cudnn.benchmark = True
@@ -34,7 +34,7 @@ if __name__ == "__main__":
         results = model.predict(
             source=str(IMAGE_DIR), conf=CONF, imgsz=IMGSZ,
             save=True, project=str(OUTPUT_DIR), name="annotated",
-            exist_ok=True, half=True, batch=16,
+            exist_ok=True, half=True, batch=32,
         )
         for r in results:
             name = Path(r.path).name

@@ -37,12 +37,12 @@ LABEL_MAP = {
     "yolo26l": "Large", "yolo26x": "XLarge",
 }
 
-# ── Shared training args (tuned for A100 40 GB) ───────────
+# ── Shared training args (tuned for H100 80 GB) ───────────
 TRAIN_ARGS = dict(
     data="data.yaml", epochs=100, imgsz=960, batch=0.90,
-    patience=20, cache="ram", workers=8, cos_lr=True,
+    patience=20, cache="ram", workers=12, cos_lr=True,
     deterministic=False, rect=True, save_period=10,
-    compile=True,       # torch.compile — 10-30% faster on A100
+    compile=True,
     degrees=15.0, flipud=0.5, scale=0.9, translate=0.2,
 )
 
@@ -65,10 +65,10 @@ def download_all_weights():
 #  Training loop with crash recovery
 # ═══════════════════════════════════════════════════════════
 def train_all():
-    # A100: maximize GPU throughput
+    # H100: maximize GPU throughput
     torch.backends.cuda.matmul.allow_tf32 = True
     torch.backends.cudnn.allow_tf32 = True
-    torch.backends.cudnn.benchmark = True  # auto-tune convolutions for fixed imgsz
+    torch.backends.cudnn.benchmark = True
 
     download_all_weights()
 

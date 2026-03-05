@@ -6,10 +6,10 @@ from ultralytics import YOLO
 SCRIPT_DIR = Path(__file__).resolve().parent
 
 if __name__ == "__main__":
-    # A100: maximize GPU throughput
+    # H100: maximize GPU throughput
     torch.backends.cuda.matmul.allow_tf32 = True
     torch.backends.cudnn.allow_tf32 = True
-    torch.backends.cudnn.benchmark = True  # auto-tune convolutions for fixed imgsz=960
+    torch.backends.cudnn.benchmark = True
 
     model = YOLO("yolo26s.pt")
 
@@ -20,10 +20,10 @@ if __name__ == "__main__":
         batch=0.90,
         patience=20,
         cache="ram",
-        workers=8,
+        workers=12,
         cos_lr=True,
         deterministic=False,
-        compile=True,  # torch.compile — 10-30% faster on A100 + PyTorch 2.x
+        compile=True,
         project=str(SCRIPT_DIR / "runs"),
         name="drone_detect",
         exist_ok=True,
