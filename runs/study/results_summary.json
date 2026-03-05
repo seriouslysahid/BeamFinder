@@ -11,5 +11,18 @@
     "preprocess_ms": 0.8,
     "inference_ms": 2.49,
     "postprocess_ms": 0.09
+  },
+  {
+    "model": "yolo26s",
+    "params_M": 10.0,
+    "train_time_min": 126.2,
+    "train_peak_mem_GB": 4.3,
+    "val_mAP50": 0.9838,
+    "val_mAP50_95": 0.6827,
+    "test_mAP50": 0.9797,
+    "test_mAP50_95": 0.6769,
+    "preprocess_ms": 0.78,
+    "inference_ms": 2.18,
+    "postprocess_ms": 0.09
   }
 ]
