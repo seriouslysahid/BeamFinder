@@ -1,0 +1,1 @@
+D:/Projects/BeamFinder/data/raw/resources/bbox_labels_final/image_BS1_599_17_00_04.txt

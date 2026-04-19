@@ -1,75 +1,56 @@
-# BeamFinder — Drone Detection for THz Beam Steering
+# BeamFinder
 
-A detection pipeline that uses YOLO26s to locate drones in images and outputs bounding box coordinates to a CSV file. Built as part of a study on line-of-sight beam steering for THz communication.
+This project detects drones using the YOLO26s architecture and mathematically groups them into optimal transmission beam clusters. It is built to run on the DeepSense 6G Scenario 23 dataset.
 
-## How It Works
+## Repository Structure
 
-1. **Training:** Fine-tunes YOLO26s on the DeepSense Scenario 23 drone dataset
-2. **Detection:** Runs the fine-tuned model on test images and outputs bounding boxes to CSV
+The codebase is organized as follows:
 
-## Project Structure
-
-```
+```text
 BeamFinder/
-├── detect.py          # Detection script (outputs bounding boxes)
-├── train.py           # Training script (fine-tune on drone data)
-├── data.yaml          # Dataset configuration for training
-├── issues.md          # Known issues and notes
-├── yolo26s.pt         # Pretrained YOLO26s model weights
-├── requirements.txt   # Python dependencies
-├── data/              # Dataset (not tracked in git)
-│   ├── images/
-│   │   ├── train/         # 7,970 images
-│   │   ├── validation/    # 1,708 images
-│   │   └── test/          # 1,709 images
-│   └── labels/            # Matching YOLO-format .txt files
-├── output/            # Detection results (CSV + annotated images)
-└── runs/              # Training results (auto-generated)
+├── configs/            # Contains dataset.yaml for YOLO data pathing
+├── data/               
+│   ├── raw/            # Place the unmodified scenario23 dataset here (including the CSV)
+│   └── processed/      # Built automatically; holds YOLO-formatted train/val/test splits
+├── paper/              # Contains the reference paper PDF and extracted Markdown text
+├── scripts/            # Contains the core execution pipeline
+└── output/             # Built automatically; holds generated model weights, metrics, and logs
 ```
 
-## Setup
+## Setup & Requirements
 
+Before running the scripts, make sure you have installed the necessary Python packages:
 ```bash
 pip install -r requirements.txt
 ```
 
-## Detection
+## How to Run the Pipeline
 
+The project is designed to be executed sequentially from the root directory. 
+
+**1. Build the Dataset**
 ```bash
-python detect.py
+python scripts/build_dataset.py
 ```
+This parses the raw DeepSense data, handles image-label alignment, and generates a 70/30 train/test split.
 
-Outputs bounding box coordinates to `output/detections.csv`.
-
-## Training
-
-Requires bounding box annotation files (`.txt` per image in YOLO format). See [issues.md](issues.md) for details.
-
+**2. Train the Model**
 ```bash
-python train.py
+python scripts/train.py
 ```
+This fine-tunes the YOLO26s model on the processed dataset. Once training is complete, the optimal model weights are automatically saved to the root directory as `best.pt`.
 
-Training results are saved to `runs/drone_detect/`.
+**3. Generate the Beam Centroids**
+```bash
+python scripts/classify.py
+```
+This sweeps the dataset using the trained model to calculate geometric centroid clusters for each beam index. The map is saved out as a `.csv` and `.pkl` object.
 
-## Output Format (detections.csv)
+**4. Run Unified Inference**
+```bash
+python scripts/detect.py
+```
+This script handles the final evaluation. It takes the test images, runs drone detection using `best.pt`, computes the Euclidean distance to the nearest beam centroid, and outputs the final classifications to the `output/` folder.
 
-| Column | Description |
-|--------|-------------|
-| image | Source image filename |
-| x_center | Bounding box center X |
-| y_center | Bounding box center Y |
-| width | Bounding box width |
-| height | Bounding box height |
-| confidence | Detection confidence (0-1) |
-| class | Detected object class |
-
-## Requirements
-
-- Python 3.10+
-- ultralytics
-
-## References
-
-- [Ultralytics YOLO Docs](https://docs.ultralytics.com/)
-- [YOLO Predict Mode](https://docs.ultralytics.com/modes/predict/)
-- [YOLO Train Mode](https://docs.ultralytics.com/modes/train/)
+## Outputs
+When the pipeline finishes, check the `output/` folder. It will contain annotated images showing the drone bounding boxes, along with a unified `detections.csv` containing coordinates, confidence scores, and predicted beam indices.
