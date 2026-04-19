@@ -4,16 +4,25 @@ import torch
 from ultralytics import YOLO
 
 def main():
+    # ── MAX PERFORMANCE OVERRIDES (A100/AMPERE SPECIFIC) ──
+    # Enable Tensor-Float-32 (TF32) on Ampere architecture GPUs for up to 5x speedup
+    torch.backends.cuda.matmul.allow_tf32 = True
+    torch.backends.cudnn.allow_tf32 = True
+    # Enables cuDNN to find optimal matrix convolution algorithms dynamically
+    torch.backends.cudnn.benchmark = True
+    # ──────────────────────────────────────────────────────
+    
     model = YOLO("yolo26s.pt")
 
     model.train(
         data="configs/dataset.yaml",
         epochs=1000,
         imgsz=960,
-        batch=0.90,
+        batch=0.95,            # Pushing VRAM saturation to 95% threshold
         patience=50,
         cache="ram",
-        workers=0,
+        workers=12,            # Fully saturate all 12 available CPUs
+        amp=True,              # Automatic Mixed Precision for blisteringly fast gradients
         cos_lr=True,
         deterministic=False,
         compile=True,
