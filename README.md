@@ -12,6 +12,7 @@ BeamFinder/
 ├── data/               
 │   ├── raw/            # Place the unmodified scenario23 dataset here (including the CSV)
 │   └── processed/      # Built automatically; holds YOLO-formatted train/val/test splits
+├── notebooks/          # Colab-ready versions of the executable scripts
 ├── paper/              # Contains the reference paper PDF and extracted Markdown text
 ├── scripts/            # Contains the core execution pipeline
 └── output/             # Built automatically; holds generated model weights, metrics, and logs
