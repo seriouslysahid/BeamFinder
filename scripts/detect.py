@@ -4,20 +4,24 @@ from pathlib import Path
 import torch
 from ultralytics import YOLO
 
-def get_closest_beam(x, y, centroids):
+def get_closest_beam(abs_x, abs_y, centroids):
     if not centroids:
         return None, None
-    query = np.array([x, y])
+    query = np.array([abs_x, abs_y])
     best_beam = None
     min_dist = float('inf')
     
-    for b_idx, (cx, cy) in centroids.items():
-        dist = float(np.linalg.norm(query - np.array([cx, cy])))
+    for b_idx, (cx_norm, cy_norm) in centroids.items():
+        # Scale the normalized centroid to physical pixel space (960x544) 
+        # to prevent aspect-ratio warping during spherical distance calculation.
+        centroid_abs = np.array([cx_norm * 960, cy_norm * 544])
+        dist = float(np.linalg.norm(query - centroid_abs))
+        
         if dist < min_dist:
             min_dist = dist
             best_beam = b_idx
             
-    return best_beam, round(min_dist, 6)
+    return best_beam, round(min_dist, 2)
 
 def main():
     if not Path("best.pt").exists():
@@ -55,6 +59,7 @@ def main():
                 
             name = Path(r.path).name
             for box in r.boxes:
+                # Reverting back to ABSOLUTE pixel coordinates to fix the 16:9 distortion
                 cx, cy, w, h = box.xywh[0].tolist()
                 b_idx, b_dist = get_closest_beam(cx, cy, centroids)
                 

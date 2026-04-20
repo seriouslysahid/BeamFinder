@@ -5,3 +5,5 @@ test: images/test
 
 nc: 1
 names: ["drone"]
+
+Agent

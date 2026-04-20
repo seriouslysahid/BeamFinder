@@ -1,49 +1,12 @@
-# Python
+# Dataset tracking
+data/processed/
+
+# Ultralytics & Model Outputs
+runs/
 __pycache__/
-*.py[cod]
-*$py.class
-*.egg-info/
-dist/
-build/
-*.egg
 
-# Virtual Environment
-venv/
-.venv/
-env/
+# Ignore massive weight files (but allow our code files)
+!yolo26s.pt
 
-# Environment Variables
-.env
-.env.local
-
-# Model Weights (large binary files)
-*.pt
-*.onnx
-*.engine
-
-# Data
-output/
-dataset/
-
-# IDE
-.vscode/
-.idea/
-*.swp
-*.swo
-*~
-
-# OS
-.DS_Store
-Thumbs.db
-desktop.ini
-
-# Jupyter
+# Python caches
 .ipynb_checkpoints/
-
-# GSD / Agent
-.agent/
-.gemini/
-.gsd/
-
-# Misc
-*.log

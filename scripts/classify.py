@@ -5,6 +5,7 @@ import pickle
 import numpy as np
 import pandas as pd
 from pathlib import Path
+from tqdm import tqdm
 from ultralytics import YOLO
 
 def get_seq(filename):
@@ -32,7 +33,8 @@ def main():
     model = YOLO(model_path)
     beam_coords = {}
     
-    for img in Path(img_dir).glob("*.jpg"):
+    images = list(Path(img_dir).glob("*.jpg"))
+    for img in tqdm(images, desc="Mapping Drone Geometry"):
         seq = get_seq(img.name)
         if seq is None or seq not in seq_beam_map:
             continue
