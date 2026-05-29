@@ -1,78 +1,63 @@
-import os
-import re
-import json
-import pickle
 import numpy as np
 import pandas as pd
+import joblib
 from pathlib import Path
 from tqdm import tqdm
 from ultralytics import YOLO
-
-def get_seq(filename):
-    match = re.match(r"image_BS1_(\d+)_\d+_\d+_\d+", Path(filename).stem)
-    if match: return int(match.group(1))
-    return None
+from sklearn.neighbors import KNeighborsClassifier
 
 def main():
-    csv_path = "data/raw/scenario23.csv"
     img_dir = "data/processed/images/train"
     model_path = "best.pt"
+    beam_lookup_path = "data/processed/beam_lookup.csv"
     out_dir = Path("output/beam_model")
     out_dir.mkdir(parents=True, exist_ok=True)
     
-    # 1. build lookup
-    df = pd.read_csv(csv_path)
-    df = df[["index", "unit1_rgb", "unit1_beam_index"]].copy()
-    df.columns = ["seq", "img", "beam"]
-    df = df.dropna(subset=["beam"])
-    df["beam"] = df["beam"].astype(int)
+    # 1. Load beam lookup
+    beam_lookup = pd.read_csv(beam_lookup_path)
+    stem_to_beam = dict(zip(beam_lookup["stem"], beam_lookup["beam"]))
     
-    seq_beam_map = dict(zip(df["seq"], df["beam"]))
-
-    # 2. get coords
+    # 2. Run detector and collect absolute pixel coordinates
     model = YOLO(model_path)
-    beam_coords = {}
+    points = []
+    labels = []
     
     images = list(Path(img_dir).glob("*.jpg"))
-    for img in tqdm(images, desc="Mapping Drone Geometry"):
-        seq = get_seq(img.name)
-        if seq is None or seq not in seq_beam_map:
+    for img in tqdm(images, desc="Collecting Training Points"):
+        stem = img.stem
+        if stem not in stem_to_beam:
             continue
             
-        beam = seq_beam_map[seq]
+        beam = stem_to_beam[stem]
         res = model(str(img), conf=0.25, verbose=False)
         boxes = res[0].boxes
         
         if boxes is None or len(boxes) == 0:
             continue
             
+        # Get highest-confidence box center in absolute pixel coordinates
         best = int(np.argmax(boxes.conf.cpu().numpy()))
-        x, y = float(boxes.xywhn[best][0]), float(boxes.xywhn[best][1])
+        x_norm, y_norm = float(boxes.xywhn[best][0]), float(boxes.xywhn[best][1])
+        x_abs = x_norm * 960
+        y_abs = y_norm * 540
         
-        if beam not in beam_coords:
-            beam_coords[beam] = []
-        beam_coords[beam].append((x, y))
-
-    # 3. compute centroids
-    centroids = {}
-    rows = []
+        points.append([x_abs, y_abs])
+        labels.append(beam)
     
-    for beam, coords in sorted(beam_coords.items()):
-        cx, cy = np.array(coords).mean(axis=0)
-        centroids[beam] = (float(cx), float(cy))
-        rows.append({"beam_index": beam, "num_samples": len(coords), "centroid_x": round(cx, 6), "centroid_y": round(cy, 6)})
-        print(f"Beam {beam}: {len(coords)} samples, centroid = ({cx:.4f}, {cy:.4f})")
-
-    # save artifacts
-    pd.DataFrame(rows).to_csv(out_dir / "beam_centroids.csv", index=False)
+    # 3. Fit k-NN classifier
+    X = np.array(points)
+    y = np.array(labels)
     
-    with open(out_dir / "beam_centroids.pkl", "wb") as f:
-        pickle.dump(centroids, f)
-        
-    with open(out_dir / "beam_centroids.json", "w") as f:
-        json.dump(centroids, f, indent=2)
-
-    print(f"Centroids generated and saved to {out_dir}")
+    knn = KNeighborsClassifier(n_neighbors=5, weights="distance")
+    knn.fit(X, y)
+    
+    # Save classifier
+    model_file = out_dir / "beam_knn.joblib"
+    joblib.dump(knn, model_file)
+    
+    n_beams = len(np.unique(y))
+    print(f"Trained k-NN classifier on {len(X)} points across {n_beams} distinct beams")
+    print(f"Saved classifier to {model_file}")
 
 if __name__ == "__main__":
     main()

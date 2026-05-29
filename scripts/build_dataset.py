@@ -1,6 +1,7 @@
 import os
 import random
 import shutil
+import pandas as pd
 from pathlib import Path
 
 # Config
@@ -10,6 +11,7 @@ VAL_FROM_TRAIN = 0.15
 
 SRC_IMAGES = Path("data/raw/unit1/camera_data")
 SRC_LABELS = Path("data/raw/resources/bbox_labels_final")
+SRC_CSV = Path("data/raw/scenario23.csv")
 DST_ROOT   = Path("data/processed")
 
 def link_or_copy(src, dst):
@@ -62,6 +64,24 @@ def main():
 
             link_or_copy(src_img, dst_img)
             link_or_copy(src_lbl, dst_lbl)
+
+    # Build beam lookup CSV
+    print("Building beam lookup...")
+    df = pd.read_csv(SRC_CSV)
+    df = df[["index", "unit1_rgb", "unit1_beam_index"]].copy()
+    df.columns = ["seq", "img", "beam"]
+    df = df.dropna(subset=["beam"])
+    df["beam"] = df["beam"].astype(int)
+    
+    # Extract stem from image filename
+    df["stem"] = df["img"].apply(lambda x: Path(x).stem if pd.notna(x) else None)
+    df = df.dropna(subset=["stem"])
+    
+    # Keep only stem and beam columns
+    beam_lookup = df[["stem", "beam"]]
+    beam_lookup_path = DST_ROOT / "beam_lookup.csv"
+    beam_lookup.to_csv(beam_lookup_path, index=False)
+    print(f"Saved {len(beam_lookup)} beam mappings to {beam_lookup_path}")
 
     print("Done building dataset")
 

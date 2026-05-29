@@ -1,1 +1,1 @@
-D:/Projects/BeamFinder/data/raw/resources/bbox_labels_final/image_BS1_5750_17_15_47.txt
+D:/Projects/BeamFinder_bak/BeamFinder/data/raw/resources/bbox_labels_final/image_BS1_5750_17_15_47.txt
