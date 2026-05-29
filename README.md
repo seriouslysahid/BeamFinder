@@ -127,18 +127,18 @@ python scripts/evaluate.py
 
 | Metric | Value |
 |--------|-------|
-| **Top-1 Accuracy** | 73.52% |
-| **Top-3 Accuracy** | 92.09% |
-| **Top-5 Accuracy** | 92.64% |
-| **DBA (within ±1 beam)** | 92.75% |
-| **DBA (within ±2 beams)** | 96.85% |
+| **Top-1 Accuracy** | 74.99% |
+| **Top-3 Accuracy** | 96.07% |
+| **Top-5 Accuracy** | 97.55% |
+| **DBA (within ±1 beam)** | 92.64% |
+| **DBA (within ±2 beams)** | 96.71% |
 | **Test Coverage** | 97.66% (3,337/3,417 images) |
 
 *Top-k accuracy: fraction of detections where the true beam appears in the predicted top-k.*  
 *DBA (distance-based accuracy): fraction where the top-1 prediction is within ±k beam indices of the true beam (soft metric for adjacent beam overlap).*  
 *Test coverage: percentage of test images where the detector found a drone (conf ≥ 0.4).*
 
-The k-NN beam classifier achieves 92% top-3 accuracy, meaning for 9 out of 10 detections, the correct beam is in the top 3 predictions. The high DBA scores (93% within ±1, 97% within ±2) show that even when the top-1 prediction is wrong, it's usually close to the correct beam — important for real-world deployment where adjacent beams have overlapping coverage.
+The k-NN hyperparameter (k) was selected on the validation split, with k=21 chosen for best top-3 performance. Top-1 accuracy sits around 75%, which is near the ceiling for position-only beam prediction — the beam layout has inherent ambiguity where similar positions can map to different beams. Top-3 and top-5 accuracy improved significantly after tuning k, reaching 96% and 98% respectively. About 73% of top-1 misses are off by only one beam index ((92.64% - 74.99%) / (100% - 74.99%) ≈ 0.73), which explains why distance-based accuracy is high even when the exact beam is wrong. For real-world deployment, this means adjacent beams provide good fallback coverage.
 
 ## Dataset & Reference
 
