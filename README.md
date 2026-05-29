@@ -127,17 +127,18 @@ python scripts/evaluate.py
 
 | Metric | Value |
 |--------|-------|
-| **Top-1 Accuracy** | (pending A100 run) |
-| **Top-3 Accuracy** | (pending A100 run) |
-| **Top-5 Accuracy** | (pending A100 run) |
-| **DBA (within ±1 beam)** | (pending A100 run) |
-| **DBA (within ±2 beams)** | (pending A100 run) |
-| **Test Coverage** | (pending A100 run) |
+| **Top-1 Accuracy** | 73.52% |
+| **Top-3 Accuracy** | 92.09% |
+| **Top-5 Accuracy** | 92.64% |
+| **DBA (within ±1 beam)** | 92.75% |
+| **DBA (within ±2 beams)** | 96.85% |
+| **Test Coverage** | 97.66% (3,337/3,417 images) |
 
 *Top-k accuracy: fraction of detections where the true beam appears in the predicted top-k.*  
-*DBA (distance-based accuracy): fraction where the top-1 prediction is within ±k beam indices of the true beam (soft metric for adjacent beam overlap).*
+*DBA (distance-based accuracy): fraction where the top-1 prediction is within ±k beam indices of the true beam (soft metric for adjacent beam overlap).*  
+*Test coverage: percentage of test images where the detector found a drone (conf ≥ 0.4).*
 
-Results will be saved to `output/beam_metrics.json` after running the full pipeline.
+The k-NN beam classifier achieves 92% top-3 accuracy, meaning for 9 out of 10 detections, the correct beam is in the top 3 predictions. The high DBA scores (93% within ±1, 97% within ±2) show that even when the top-1 prediction is wrong, it's usually close to the correct beam — important for real-world deployment where adjacent beams have overlapping coverage.
 
 ## Dataset & Reference
 
@@ -151,6 +152,6 @@ Results will be saved to `output/beam_metrics.json` after running the full pipel
 - **Fixed camera**: The base station camera is stationary and level. If the camera moves or tilts, the position-to-beam mapping breaks.
 - **No temporal modeling**: We treat each frame independently. A tracker or LSTM could smooth predictions across time.
 - **Beam layout is dataset-specific**: The k-NN model learns the beam geometry from this particular base station setup. A different antenna array would need retraining.
-- **Detection failures**: If YOLO misses the drone (low confidence or occlusion), we can't predict a beam. Current test coverage is not yet measured (pending A100 run).
+- **Detection failures**: If YOLO misses the drone (low confidence or occlusion), we can't predict a beam. Current test coverage is 97.66% (3,337 out of 3,417 test images had detections). The 80 missed images are likely edge cases with occlusion or poor lighting.
 
 Possible improvements: add a fallback beam for missed detections, use optical flow to predict drone motion, try a lightweight neural network instead of k-NN for the beam stage.
