@@ -2,13 +2,24 @@
 data/processed/
 
 # Ultralytics & Model Outputs
+runs/
 __pycache__/
+*.pyc
 
-# Ignore massive weight files (but allow our code files)
-!yolo26s.pt
+# Output artifacts (regenerable except best.pt at root)
+output/annotated/
+output/detections.csv
+output/beam_metrics.json
+output/beam_model/
 
 # Python caches
 .ipynb_checkpoints/
 
+# Outdated notebooks (removed from tracking)
+notebooks/
+
 # Kiro IDE
 .kiro/
+
+# Keep best.pt at root (trained weights)
+!best.pt
