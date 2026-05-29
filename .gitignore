@@ -2,7 +2,6 @@
 data/processed/
 
 # Ultralytics & Model Outputs
-runs/
 __pycache__/
 
 # Ignore massive weight files (but allow our code files)
