@@ -1,0 +1,11 @@
+{
+  "test_images": 3417,
+  "detected_images": 3337,
+  "coverage": 0.9766,
+  "detections_evaluated": 3463,
+  "top1_accuracy": 0.7352,
+  "top3_accuracy": 0.9209,
+  "top5_accuracy": 0.9264,
+  "dba_within_1": 0.9275,
+  "dba_within_2": 0.9685
+}

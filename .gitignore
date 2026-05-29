@@ -6,12 +6,6 @@ runs/
 __pycache__/
 *.pyc
 
-# Output artifacts (regenerable except best.pt at root)
-output/annotated/
-output/detections.csv
-output/beam_metrics.json
-output/beam_model/
-
 # Python caches
 .ipynb_checkpoints/
 
