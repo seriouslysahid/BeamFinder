@@ -11,7 +11,7 @@ def main():
         patience=20,
         imgsz=960,
         rect=True,
-        batch=0.90,
+        batch=64,  # Optimal for A100 40GB (AutoBatch found this)
         optimizer="auto",
         cos_lr=True,
         box=10.0,
@@ -26,14 +26,18 @@ def main():
         hsv_h=0.015,
         hsv_s=0.4,
         hsv_v=0.4,
-        cache="ram",
-        workers=0,
+        cache="ram",  # 40GB VRAM + dataset fits in RAM
+        workers=16,  # A100 has 30 CPUs, use 16 workers for data loading
+        device=0,
         deterministic=False,
         compile=True,
+        amp=True,
         project="runs",
         name="drone_detect_s23_v2",
         exist_ok=True,
         save_period=10,
+        plots=False,  # Disable plotting to save I/O time
+        val=True,
     )
 
     metrics = model.val(imgsz=960, half=True)
